@@ -1,7 +1,6 @@
-# Coinbase Pro Ruby library
+# Coinbase Pro Ruby library - Updated fork
 
-__Note:__ This library isn't actively maintained.
-Please refer to the [Node.js client library](https://github.com/coinbase/coinbase-pro-node) for an up-to-date client implementation.
+This is a fork of the Coinbase Pro Ruby Library.  The official library is no longer supported or maintained, but this one is.
 
 ## REST Client
 
