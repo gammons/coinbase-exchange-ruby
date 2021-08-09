@@ -3,17 +3,10 @@ module Coinbase
     # Websocket client for Coinbase Exchange
     class Websocket
       def initialize(options = {})
-        @ws_url = options[:ws_url] || "wss://ws-feed.gdax.com"
-        @product = options[:product_id] || 'BTC-USD'
-        @keepalive = options[:keepalive] || false
+        @ws_url = options[:ws_url] || 'wss://ws-feed.pro.coinbase.com'
+        @keepalive = options[:keepalive] || true
 
-        @message_cb = ->(_data) { nil }
-        @received_cb = ->(_data) { nil }
-        @open_cb = ->(_data) { nil }
-        @match_cb = ->(_data) { nil }
-        @change_cb = ->(_data) { nil }
-        @done_cb = ->(_data) { nil }
-        @error_cb = ->(_data) { nil }
+        setup_default_callbacks
       end
 
       def start!
@@ -27,11 +20,11 @@ module Coinbase
       end
 
       def stop!
-        if @reactor_owner == true
-          @socket.onclose = ->(_event) { EM.stop }
-        else
-          @socket.onclose = ->(_event) { nil }
-        end
+        @socket.onclose = if @reactor_owner == true
+                            ->(_event) { EM.stop }
+                          else
+                            ->(_event) { nil }
+                          end
         @socket.close
       end
 
@@ -44,8 +37,9 @@ module Coinbase
       end
 
       def subscribe!(options = {})
-        product = options[:product_id] || @product
-        @socket.send({ type: 'subscribe', product_id: product }.to_json)
+        products = options[:product_ids]
+        channels = options.fetch(:channels, []).map { |c| { name: c } }
+        @socket.send({ type: 'subscribe', product_ids: products, channels: channels }.to_json)
       end
 
       def ping(options = {})
@@ -112,7 +106,17 @@ module Coinbase
       end
 
       def ws_error(event)
-        fail WebsocketError, event.data
+        raise WebsocketError, event.data
+      end
+
+      def setup_default_callbacks
+        @message_cb = ->(_data) { nil }
+        @received_cb = ->(_data) { nil }
+        @open_cb = ->(_data) { nil }
+        @match_cb = ->(_data) { nil }
+        @change_cb = ->(_data) { nil }
+        @done_cb = ->(_data) { nil }
+        @error_cb = ->(_data) { nil }
       end
     end
   end
