@@ -37,9 +37,10 @@ module Coinbase
       end
 
       def subscribe!(options = {})
-        products = options[:product_ids]
-        channels = options.fetch(:channels, []).map { |c| { name: c } }
-        @socket.send({ type: 'subscribe', product_ids: products, channels: channels }.to_json)
+        product_ids = options.fetch(:product_ids, [])
+        channels = options.fetch(:channels, [])
+
+        @socket.send({ type: 'subscribe', product_ids: product_ids, channels: channels }.to_json)
       end
 
       def ping(options = {})
