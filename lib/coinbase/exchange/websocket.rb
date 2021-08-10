@@ -6,7 +6,7 @@ module Coinbase
         @ws_url = options[:ws_url] || 'wss://ws-feed.pro.coinbase.com'
         @keepalive = options[:keepalive] || true
 
-        setup_default_callbacks
+        # setup_default_callbacks
       end
 
       def start!
@@ -30,7 +30,6 @@ module Coinbase
 
       def refresh!
         @socket = Faye::WebSocket::Client.new(@ws_url)
-        @socket.onopen = method(:ws_opened)
         @socket.onmessage = method(:ws_received)
         @socket.onclose = method(:ws_closed)
         @socket.onerror = method(:ws_error)
@@ -40,7 +39,7 @@ module Coinbase
         product_ids = options.fetch(:product_ids, [])
         channels = options.fetch(:channels, [])
 
-        @socket.send({ type: 'subscribe', product_ids: product_ids, channels: channels }.to_json)
+        send({ type: 'subscribe', product_ids: product_ids, channels: channels })
       end
 
       def ping(options = {})
@@ -81,20 +80,16 @@ module Coinbase
 
       private
 
-      def ws_opened(_event)
-        subscribe!
-      end
-
       def ws_received(event)
         data = APIObject.new(JSON.parse(event.data))
-        @message_cb.call(data)
+        @received_cb.call(data)
         case data['type']
-        when 'received' then @received_cb.call(data)
         when 'open' then @open_cb.call(data)
         when 'match' then @match_cb.call(data)
         when 'change' then @change_cb.call(data)
         when 'done' then @done_cb.call(data)
         when 'error' then @error_cb.call(data)
+        else @received_cb.call(data)
         end
       end
 
@@ -108,6 +103,10 @@ module Coinbase
 
       def ws_error(event)
         raise WebsocketError, event.data
+      end
+
+      def send(msg)
+        @socket.send(msg.to_json)
       end
 
       def setup_default_callbacks

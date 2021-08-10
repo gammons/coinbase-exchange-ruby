@@ -9,14 +9,16 @@ module Coinbase
 
       def update(data)
         return if data.nil?
+
         data.each { |key, val| self[key] = val } if data.is_a?(Hash)
       end
 
       def format(var)
         return if var.nil?
+
         # Looks like a number or currency
         if var =~ /^.{0,1}\s*[0-9,]*\.{0,1}[0-9]*$/
-          BigDecimal(var.gsub(/[^0-9\.\-]/, ''))
+          BigDecimal(var.gsub(/[^0-9.\-]/, ''))
         else
           var
         end
@@ -32,7 +34,7 @@ module Coinbase
       end
 
       def respond_to_missing?(method, include_all = false)
-        self.key?(method.to_s) || super
+        key?(method.to_s) || super
       end
     end
   end
