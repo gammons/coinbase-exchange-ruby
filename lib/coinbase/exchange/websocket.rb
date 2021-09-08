@@ -5,8 +5,6 @@ module Coinbase
       def initialize(options = {})
         @ws_url = options[:ws_url] || 'wss://ws-feed.pro.coinbase.com'
         @keepalive = options[:keepalive] || true
-
-        # setup_default_callbacks
       end
 
       def start!
@@ -107,16 +105,6 @@ module Coinbase
 
       def send(msg)
         @socket.send(msg.to_json)
-      end
-
-      def setup_default_callbacks
-        @message_cb = ->(_data) { nil }
-        @received_cb = ->(_data) { nil }
-        @open_cb = ->(_data) { nil }
-        @match_cb = ->(_data) { nil }
-        @change_cb = ->(_data) { nil }
-        @done_cb = ->(_data) { nil }
-        @error_cb = ->(_data) { nil }
       end
     end
   end
