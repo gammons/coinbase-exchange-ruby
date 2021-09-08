@@ -23,14 +23,12 @@ module Coinbase
         req.body = body
 
         req_ts = Time.now.utc.to_i.to_s
-        signature = Base64.encode64(
-          OpenSSL::HMAC.digest('sha256', Base64.decode64(@api_secret).strip,
-                               "#{req_ts}#{method}#{path}#{body}")).strip
+
         req['Content-Type'] = 'application/json'
         req['CB-ACCESS-TIMESTAMP'] = req_ts
         req['CB-ACCESS-PASSPHRASE'] = @api_pass
         req['CB-ACCESS-KEY'] = @api_key
-        req['CB-ACCESS-SIGN'] = signature
+        req['CB-ACCESS-SIGN'] = signature(path, body, method)
 
         resp = @conn.request(req)
         case resp.code
@@ -43,6 +41,17 @@ module Coinbase
         when "500" then fail InternalServerError, resp.body
         end
         resp.body
+      end
+
+      def signature(request_path = '', body = '', method = 'GET')
+        body = body.to_json if body.is_a?(Hash)
+        timestamp = Time.now.utc.to_i
+
+        what = "#{timestamp}#{method}#{request_path}#{body}"
+
+        secret = Base64.decode64(@api_secret)
+        hash = OpenSSL::HMAC.digest('sha256', secret, what)
+        Base64.strict_encode64(hash)
       end
     end
 
